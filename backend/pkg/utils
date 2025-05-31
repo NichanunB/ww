@@ -1,0 +1,126 @@
+// backend/pkg/utils/utils.go
+package utils
+
+import (
+    "crypto/rand"
+    "encoding/hex"
+    "regexp"
+    "strings"
+    "time"
+    "unicode"
+)
+
+// GenerateID generates a random ID string
+func GenerateID(length int) string {
+    bytes := make([]byte, length/2)
+    if _, err := rand.Read(bytes); err != nil {
+        // Fallback to timestamp-based ID
+        return hex.EncodeToString([]byte(time.Now().String()))[:length]
+    }
+    return hex.EncodeToString(bytes)
+}
+
+// SanitizeString removes dangerous characters from user input
+func SanitizeString(input string) string {
+    // Remove HTML tags
+    htmlTagRegex := regexp.MustCompile(`<[^>]*>`)
+    cleaned := htmlTagRegex.ReplaceAllString(input, "")
+    
+    // Trim whitespace
+    cleaned = strings.TrimSpace(cleaned)
+    
+    return cleaned
+}
+
+// ValidateEmail validates email format
+func ValidateEmail(email string) bool {
+    emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+    return emailRegex.MatchString(email)
+}
+
+// ValidatePassword checks password strength
+func ValidatePassword(password string) (bool, string) {
+    if len(password) < 6 {
+        return false, "Password must be at least 6 characters long"
+    }
+    
+    if len(password) > 128 {
+        return false, "Password must be less than 128 characters"
+    }
+    
+    hasUpper := false
+    hasLower := false
+    hasDigit := false
+    
+    for _, char := range password {
+        switch {
+        case unicode.IsUpper(char):
+            hasUpper = true
+        case unicode.IsLower(char):
+            hasLower = true
+        case unicode.IsDigit(char):
+            hasDigit = true
+        }
+    }
+    
+    if !hasUpper || !hasLower || !hasDigit {
+        return false, "Password must contain at least one uppercase letter, one lowercase letter, and one digit"
+    }
+    
+    return true, ""
+}
+
+// TruncateString truncates a string to specified length
+func TruncateString(s string, maxLength int) string {
+    if len(s) <= maxLength {
+        return s
+    }
+    return s[:maxLength-3] + "..."
+}
+
+// Contains checks if a slice contains a string
+func Contains(slice []string, item string) bool {
+    for _, s := range slice {
+        if s == item {
+            return true
+        }
+    }
+    return false
+}
+
+// SlugifyString converts a string to a URL-friendly slug
+func SlugifyString(s string) string {
+    // Convert to lowercase
+    s = strings.ToLower(s)
+    
+    // Replace spaces and special characters with hyphens
+    reg := regexp.MustCompile(`[^a-z0-9]+`)
+    s = reg.ReplaceAllString(s, "-")
+    
+    // Remove leading and trailing hyphens
+    s = strings.Trim(s, "-")
+    
+    return s
+}
+
+// FormatFileSize formats file size in bytes to human readable format
+func FormatFileSize(bytes int64) string {
+    const unit = 1024
+    if bytes < unit {
+        return fmt.Sprintf("%d B", bytes)
+    }
+    div, exp := int64(unit), 0
+    for n := bytes / unit; n >= unit; n /= unit {
+        div *= unit
+        exp++
+    }
+    return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// ParseDuration parses duration string with fallback
+func ParseDuration(s string, fallback time.Duration) time.Duration {
+    if d, err := time.ParseDuration(s); err == nil {
+        return d
+    }
+    return fallback
+}

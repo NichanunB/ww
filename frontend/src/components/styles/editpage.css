@@ -1,0 +1,795 @@
+/* EditPage Component Styles */
+.edit-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Toolbar Styles */
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f0f2f5;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tool-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 4px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #555;
+}
+
+.tool-button:hover {
+  background-color: #e4e6eb;
+  color: #333;
+}
+
+.tool-button.active {
+  background-color: #e7f3ff;
+  border-color: #1677ff;
+  color: #1677ff;
+}
+
+.tool-button.eraser-active {
+  background-color: #fff1f0;
+  border-color: #ff4d4f;
+  color: #ff4d4f;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #ddd;
+  margin: 0 8px;
+}
+
+.zoom-level {
+  font-size: 14px;
+  margin: 0 8px;
+  min-width: 48px;
+  text-align: center;
+  color: #666;
+}
+
+/* Dropdown Menu Styles - Combined for Edit and Style */
+.edit-dropdown,
+.style-dropdown {
+  position: absolute;
+  top: 110px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  width: 220px;
+}
+
+.edit-dropdown {
+  left: 60px;
+}
+
+.style-dropdown {
+  left: 100px;
+}
+
+.edit-dropdown.open,
+.style-dropdown.open {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.edit-dropdown ul,
+.style-dropdown ul {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+}
+
+.edit-dropdown li,
+.style-dropdown li {
+  padding: 0;
+  margin: 0;
+}
+
+.edit-dropdown a,
+.style-dropdown a {
+  display: block;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+}
+
+.edit-dropdown a:hover,
+.style-dropdown a:hover {
+  background-color: #f5f5f5;
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Edit Container Styles */
+.edit-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background-color: #f9f9f9;
+  overflow: hidden;
+}
+
+.edit-container h1 {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+/* Element Styles */
+.element {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  z-index: 10;
+}
+
+.element.selected {
+  z-index: 20;
+} 
+
+/* Circle Element Styles */
+.circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #e6f7ff;
+  border: 2px solid #1890ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.circle.selected {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  border-color: #1677ff;
+}
+
+/* Relationship mode styling */
+.relationship-mode .circle.relationship-candidate {
+  cursor: pointer;
+}
+
+.relationship-mode .circle.relationship-candidate:hover {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.2);
+}
+
+.relationship-mode .circle.selected {
+  border-color: #52c41a;
+  box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.3);
+  background-color: #f6ffed;
+}
+
+.circle-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle-name-input {
+  margin-top: 4px;
+  width: 90%;
+  font-size: 10px;
+  text-align: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+/* Textbox Element Styles */
+.textbox {
+  min-width: 150px;
+  min-height: 100px;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+
+.text-box {
+  resize: both;              /* ✅ ให้ผู้ใช้ขยายกล่องได้ */
+  overflow: auto;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  width: 150px;
+  min-height: 50px;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  outline: none;
+}
+
+
+.textbox.selected .text-box {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Image Element Styles */
+.image {
+  width: 120px;
+  height: 120px;
+  background-color: #f5f5f5;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.image.selected {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.image-caption-input {
+  margin-top: 8px;
+  width: 90%;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+/* Eraser Mode Styles */
+.eraser-mode .canvas-area {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23ff4d4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>') 10 10, auto;
+}
+
+.eraser-mode .element {
+  transition: opacity 0.3s ease;
+}
+
+.eraser-mode .element:hover {
+  opacity: 0.5;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.4);
+}
+
+/* Animation for element deletion */
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.element.deleting {
+  animation: fadeOut 0.3s forwards;
+  pointer-events: none;
+}
+
+/* Canvas Component Styles */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 60px); /* Adjust based on your header height */
+  background-color: #fcfcfc;
+  overflow: hidden;
+  touch-action: none; /* Prevents default touch behaviors */
+}
+
+.diagram-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Cursor styles for different interaction modes */
+.canvas-container.dragging-mode .diagram-canvas {
+  cursor: grab;
+}
+
+.canvas-container.dragging-active .diagram-canvas {
+  cursor: grabbing;
+}
+
+.canvas-container.eraser-mode .diagram-canvas {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23ff4d4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 13H5v-2h14v2z"/></svg>') 10 10, auto;
+}
+
+.canvas-container.relationship-mode .diagram-canvas {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%231677ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>') 10 10, auto;
+}
+
+.canvas-container.text-mode .diagram-canvas {
+  cursor: text;
+}
+
+/* Zoom controls - if you add them to your interface */
+.zoom-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  background-color: white;
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.zoom-button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.zoom-button:hover {
+  border-color: #1677ff;
+  color: #1677ff;
+}
+
+.zoom-level {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Minimap - if you implement one */
+.minimap {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  width: 150px;
+  height: 100px;
+  background-color: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.minimap-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Status indicators */
+.status-indicator {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.status-indicator.relationship-mode {
+  background-color: #e6f7ff;
+  color: #1677ff;
+}
+
+.status-indicator.eraser-mode {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+}
+
+/* Loading state */
+.canvas-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 20;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1677ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Tooltip for relationship lines */
+.relationship-tooltip {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #333;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 15;
+  max-width: 200px;
+  white-space: nowrap;
+}
+
+/* Selection highlight effect */
+@keyframes selectionPulse {
+  0% { box-shadow: 0 0 0 0 rgba(22, 119, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(22, 119, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 119, 255, 0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .zoom-controls {
+    bottom: 80px; /* Adjust if you have bottom navigation */
+  }
+  
+  .minimap {
+    display: none; /* Hide minimap on mobile */
+  }
+}
+
+/* Property Panel Styles */
+.property-panel {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  width: 280px;
+  position: absolute;
+  right: 20px;
+  top: 80px;
+  z-index: 100;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.property-panel h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.element-type-label {
+  background-color: #e6f7ff;
+  border-radius: 4px;
+  color: #1677ff;
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  padding: 4px 8px;
+}
+
+.property-field {
+  margin-bottom: 16px;
+}
+
+.property-field label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #444;
+}
+
+.property-field input[type="text"],
+.property-field input[type="number"],
+.property-field textarea,
+.property-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  color: #333;
+  background-color: #fff;
+}
+
+.property-field input[type="text"]:focus,
+.property-field input[type="number"]:focus,
+.property-field textarea:focus,
+.property-field select:focus {
+  border-color: #1677ff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+}
+
+.property-field input[type="color"] {
+  width: 60px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.property-field input[type="range"] {
+  width: 70%;
+  vertical-align: middle;
+}
+
+.property-field input[type="range"] + span {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 13px;
+  color: #666;
+  width: 50px;
+}
+
+.property-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.image-upload-field .image-placeholder {
+  width: 100%;
+  height: 120px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background-color: #fafafa;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.image-upload-field .image-placeholder:hover {
+  border-color: #1677ff;
+  background-color: #f0f7ff;
+}
+
+.image-upload-field .image-placeholder span {
+  color: #666;
+  font-size: 14px;
+}
+
+.image-upload-field .preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.property-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+}
+
+.action-button {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  width: 100%;
+  text-align: center;
+  font-weight: 500;
+}
+
+.visibility-toggle {
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+.visibility-toggle:hover {
+  background-color: #e6e8eb;
+}
+
+.delete-button {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+}
+
+.delete-button:hover {
+  background-color: #ffccc7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .property-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+/* Main canvas container */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-color: #ffffff;
+  overflow: hidden;
+  border: 1px solid #d9d9d9;
+}
+
+/* The canvas itself */
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Highlight selected element (if you plan to use HTML overlay for selection) */
+.selected {
+  border: 2px solid #1677ff;
+  box-shadow: 0 0 4px #1677ff;
+}
+
+/* Tooltip or text label on canvas (if using HTML overlays) */
+.canvas-label {
+  position: absolute;
+  background: #ffffff;
+  color: #000;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Optional styling for control panel (if you have one) */
+.canvas-controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Grid toggle or zoom controls */
+.canvas-controls button {
+  margin: 4px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  background-color: #1677ff;
+  color: white;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.canvas-controls button:hover {
+  background-color: #0958d9;
+}
+
+/* Relationship Layer Styles */
+.relationships-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Keep none here so it doesn't block canvas clicks */
+  z-index: 5;
+}
+
+.relationship-line {
+  cursor: pointer;
+  transition: stroke-width 0.2s ease;
+  pointer-events: auto; /* Add auto here so the line itself receives clicks */
+}
+
+.relationship-line.selected {
+  /* No specific style here, selection is handled by strokeWidth */
+}
+
+.relationship-label-container {
+  overflow: visible;
+  pointer-events: auto; /* Allow interaction with the input */
+}
+
+.relationship-label {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  width: 100%;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease;
+}
+
+.relationship-label.editing {
+  border-color: #1677ff;
+  background-color: #fff;
+}
