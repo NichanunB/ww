@@ -1,4 +1,6 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
+// frontend/src/components/editpage-components/PropertyPanel.jsx
+
 import { ELEMENT_TYPES } from '../../constants/elementTypes';
 import '../styles/editpage.css'; 
 
@@ -59,19 +61,6 @@ const PropertyPanel = ({
               />
             </div>
             
-            {/* <div className="property-field">
-              <label>Character Type:</label>
-              <select 
-                value={selectedElement.characterType || 'neutral'} 
-                onChange={(e) => updateElement(selectedElement.id, { characterType: e.target.value })}
-              >
-                <option value="neutral">Neutral</option>
-                <option value="protagonist">Protagonist</option>
-                <option value="antagonist">Antagonist</option>
-                <option value="supporting">Supporting</option>
-              </select>
-            </div> */}
-            
             <div className="property-field">
               <label>Color:</label>
               <input 
@@ -102,70 +91,69 @@ const PropertyPanel = ({
         );
         
       case ELEMENT_TYPES.TEXTBOX:
-      return (
-        <>
-          <div className="property-field">
-            <label>Text:</label>
-            <textarea 
-              value={selectedElement.text || ''} 
-              onChange={handleTextChange} 
-              rows={4}
-              placeholder="Enter text here"
-              style={{ resize: 'none' }}
-            />
-          </div>
+        return (
+          <>
+            <div className="property-field">
+              <label>Text:</label>
+              <textarea 
+                value={selectedElement.text || ''} 
+                onChange={handleTextChange} 
+                rows={4}
+                placeholder="Enter text here"
+                style={{ resize: 'none' }}
+              />
+            </div>
 
-          <div className="property-field">
-            <label>Font Size:</label>
-            <input
-              type="number"
-              min={10}
-              max={72}
-              value={selectedElement.fontSize || 14}
-              onChange={(e) => updateElement(selectedElement.id, { fontSize: Number(e.target.value) })}
-            />
-          </div>
-      
-          <div className="property-field">
-            <label>Box color:</label>
-            <input 
-              type="color"
-              value={selectedElement.color || '#000000'}
-              onChange={handleColorChange}
-            />
-          </div>
-      
-          <div className="property-field">
-            <label>Text color:</label>
-            <input 
-              type="color"
-              value={selectedElement.fontColor || '#000000'}
-              onChange={(e) => updateElement(selectedElement.id, { fontColor: e.target.value })}
-            />
-          </div>
-      
-          <div className="property-field">
-            <label>Width:</label>
-            <input 
-              type="number" 
-              value={selectedElement.width || 150}
-              onChange={(e) => updateElement(selectedElement.id, { width: Number(e.target.value) })}
-              min="50"
-            />
-          </div>
-      
-          <div className="property-field">
-            <label>Height:</label>
-            <input 
-              type="number" 
-              value={selectedElement.height || 100}
-              onChange={(e) => updateElement(selectedElement.id, { height: Number(e.target.value) })}
-              min="30"
-            />
-          </div>
-        </>
-      );
-
+            <div className="property-field">
+              <label>Font Size:</label>
+              <input
+                type="number"
+                min={10}
+                max={72}
+                value={selectedElement.fontSize || 14}
+                onChange={(e) => updateElement(selectedElement.id, { fontSize: Number(e.target.value) })}
+              />
+            </div>
+        
+            <div className="property-field">
+              <label>Box color:</label>
+              <input 
+                type="color"
+                value={selectedElement.color || '#000000'}
+                onChange={handleColorChange}
+              />
+            </div>
+        
+            <div className="property-field">
+              <label>Text color:</label>
+              <input 
+                type="color"
+                value={selectedElement.fontColor || '#000000'}
+                onChange={(e) => updateElement(selectedElement.id, { fontColor: e.target.value })}
+              />
+            </div>
+        
+            <div className="property-field">
+              <label>Width:</label>
+              <input 
+                type="number" 
+                value={selectedElement.width || 150}
+                onChange={(e) => updateElement(selectedElement.id, { width: Number(e.target.value) })}
+                min="50"
+              />
+            </div>
+        
+            <div className="property-field">
+              <label>Height:</label>
+              <input 
+                type="number" 
+                value={selectedElement.height || 100}
+                onChange={(e) => updateElement(selectedElement.id, { height: Number(e.target.value) })}
+                min="30"
+              />
+            </div>
+          </>
+        );
         
       case ELEMENT_TYPES.LINE:
         return (
@@ -202,19 +190,40 @@ const PropertyPanel = ({
                 type="text" 
                 value={selectedElement.text || ''} 
                 onChange={handleTextChange} 
-                placeholder="e.g. Friend, Enemy, Mentor"
+                placeholder="e.g. คนรัก, ศัตรู, พี่น้อง"
               />
             </div>
             
-            {/* Hide Line Color for relationships for simplicity */}
-            {/* <div className="property-field">
+            <div className="property-field">
               <label>Line Color:</label>
               <input 
                 type="color" 
                 value={selectedElement.color || '#1677ff'} 
                 onChange={handleColorChange}
               />
-            </div> */}
+            </div>
+
+            <div className="property-field">
+              <label>Line Type:</label>
+              <select 
+                value={selectedElement.lineType || 'solid'} 
+                onChange={(e) => updateElement(selectedElement.id, { lineType: e.target.value })}
+              >
+                <option value="solid">เส้นทึบ (Solid)</option>
+                <option value="dashed">เส้นประ (Dashed)</option>
+                <option value="dotted">เส้นจุด (Dotted)</option>
+                <option value="dashdot">เส้นประจุด (Dash-dot)</option>
+              </select>
+            </div>
+
+            <div className="property-actions">
+              <button 
+                className="action-button delete-button"
+                onClick={() => removeElement(selectedElement.id)}
+              >
+                Delete Relationship
+              </button>
+            </div>
           </>
         );
         

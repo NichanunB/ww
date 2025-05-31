@@ -1,4 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+// frontend/src/pages/editpage.jsx
+import { useEffect, useRef, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { projectAPI } from '../services/api';
 import '../components/styles/editpage.css';
 
 // Hooks
@@ -15,14 +19,20 @@ import PropertyPanel from '../components/editpage-components/PropertyPanel';
 import RelationshipLayer from '../components/editpage-components/RelationshipLayer';
 
 function EditPage() {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const canvasRef = useRef(null);
+  
   const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
   const [projectName, setProjectName] = useState("Untitled Character Diagram");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [relationshipType, setRelationshipType] = useState("generic");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentProject, setCurrentProject] = useState(null);
 
-  
   const {
     elements,
     selectedElements,
@@ -34,9 +44,9 @@ function EditPage() {
     createRelationship,
     toggleElementVisibility,
     triggerImageUpload,
-    saveProject,
-    loadProject,
-    clearSelection
+    clearSelection,
+    setElements,
+    getRelationshipStats
   } = useElementManager(canvasRef);
 
   const {
@@ -46,29 +56,91 @@ function EditPage() {
     zoomLevel,
     setTool,
     toggleEdit,
-    toggleStyle,
     toggleEraser,
     toggleRelationshipMode,
     handleZoomIn,
-    handleZoomOut,
-    resetZoom
-  } = useToolManager();
+    handleZoomOut  } = useToolManager();
+
+  // Count characters for relationship mode
+
+  // Check authentication
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+  }, [isLoggedIn, navigate]);
+
+  // Load project if editing existing project
+  useEffect(() => {
+    const loadProject = async () => {
+      if (projectId && isLoggedIn) {
+        setIsLoading(true);
+        try {
+          const response = await projectAPI.getProject(projectId);
+          const project = response.data.data || response.data;
+          
+          setCurrentProject(project);
+          setProjectName(project.title);
+          
+          // Parse project data if it exists
+          if (project.project_data) {
+            let projectData;
+            if (typeof project.project_data === 'string') {
+              projectData = JSON.parse(project.project_data);
+            } else {
+              projectData = project.project_data;
+            }
+            
+            if (projectData.elements) {
+              setElements(projectData.elements);
+            }
+          }
+          
+          setUnsavedChanges(false);
+        } catch (error) {
+          console.error('Error loading project:', error);
+          alert('Failed to load project. You may not have permission to edit this project.');
+          navigate('/');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProject();
+  }, [projectId, isLoggedIn, navigate, setElements]);
 
   // Track unsaved changes
   useEffect(() => {
-    setUnsavedChanges(true);
-  }, [elements]);
+    if (currentProject) {
+      setUnsavedChanges(true);
+    }
+  }, [elements, projectName]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!currentProject || !unsavedChanges) return;
+
+    const autoSaveInterval = setInterval(async () => {
+      if (unsavedChanges && elements.length > 0) {
+        try {
+          await projectAPI.autoSave(currentProject.id, elements);
+          console.log('Auto-saved project');
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        }
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [currentProject, unsavedChanges, elements]);
 
   useEffect(() => {
-    // Initialize canvas and setup global event handlers
-    
     // Handle escape key to clear selection
-
-    
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         clearSelection();
-        // Also exit any special modes
         if (isErasing) toggleEraser();
         if (relationshipMode) toggleRelationshipMode();
       }
@@ -78,8 +150,12 @@ function EditPage() {
         if (e.key === 's') {
           e.preventDefault();
           handleSave();
-        } else if (e.key === 'z') {
-          // Undo functionality could be implemented here
+        }
+        if (e.key === 'd') {
+          e.preventDefault();
+          if (selectedElement) {
+            updateElement(selectedElement.id);
+          }
         }
       }
     };
@@ -89,9 +165,8 @@ function EditPage() {
       const isToolbarClick = event.target.closest('.toolbar');
       const isPropertyPanelClick = event.target.closest('.property-panel');
       
-      if (!isToolbarClick && !isPropertyPanelClick && 
+      if (!isToolbarClick && !isPropertyPanelClick &&
           !canvasRef.current?.contains(event.target)) {
-        // Close dropdowns if clicking outside toolbar and canvas
         setIsEditDropdownOpen(false);
         setIsStyleDropdownOpen(false);
       }
@@ -116,47 +191,80 @@ function EditPage() {
       document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [isErasing, relationshipMode, unsavedChanges, clearSelection, toggleEraser, toggleRelationshipMode]);
+  }, [isErasing, relationshipMode, unsavedChanges, clearSelection, toggleEraser, toggleRelationshipMode, selectedElement]);
 
   // Handle saving the project
-  const handleSave = () => {
-    if (saveProject) {
-      const success = saveProject({ name: projectName, elements });
-      if (success) {
-        setUnsavedChanges(false);
+  const handleSave = async () => {
+    if (!isLoggedIn) {
+      alert('You must be logged in to save projects.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const projectData = {
+        elements,
+        metadata: {
+          version: "1.0",
+          updatedAt: new Date().toISOString(),
+          stats: getRelationshipStats()
+        }
+      };
+
+      if (currentProject) {
+        // Update existing project
+        const updates = {
+          title: projectName,
+          project_data: JSON.stringify(projectData)
+        };
+        
+        await projectAPI.updateProject(currentProject.id, updates);
+        await projectAPI.saveProjectData(currentProject.id, projectData);
+        
+        alert('Project saved successfully!');
+      } else {
+        // Create new project
+        const newProjectData = {
+          title: projectName,
+          description: null,
+          project_data: JSON.stringify(projectData)
+        };
+        
+        const response = await projectAPI.createProject(newProjectData);
+        const newProject = response.data.data || response.data;
+        setCurrentProject(newProject);
+        
+        // Update URL to include project ID
+        navigate(`/edit/${newProject.id}`, { replace: true });
+        
+        alert('Project created and saved successfully!');
       }
+      
+      setUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      alert('Failed to save project. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  // Handle loading a project
+  // Handle loading a project (placeholder for file upload)
   const handleLoad = () => {
-    const loadedName = loadProject();
-    if (loadedName) {
-      setProjectName(loadedName);
-      setUnsavedChanges(false);
-    }
+    navigate('/');
   };
 
   // Toggle functions to manage dropdown state
   const handleToggleEdit = () => {
     setIsEditDropdownOpen(!isEditDropdownOpen);
-    setIsStyleDropdownOpen(false); // Close the other dropdown
+    setIsStyleDropdownOpen(false);
     toggleEdit();
   };
 
-  const handleToggleStyle = () => {
-    setIsStyleDropdownOpen(!isStyleDropdownOpen);
-    setIsEditDropdownOpen(false); // Close the other dropdown
-    toggleStyle();
-  };
 
   const handleCanvasClick = () => {
-    // Close dropdowns when clicking on canvas
     setIsEditDropdownOpen(false);
     setIsStyleDropdownOpen(false);
-    
-    // Clear selection if clicking on empty canvas
-    // This may need adjustment based on your Canvas component implementation
   };
 
   // Wrap addElement to close dropdown after adding
@@ -172,6 +280,22 @@ function EditPage() {
     setUnsavedChanges(true);
   };
 
+  // Enhanced handleSelectElement to pass relationshipType
+  const enhancedHandleSelectElement = (id, options = {}) => {
+    handleSelectElement(id, { ...options, relationshipType });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="edit-page">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="edit-page">
       <div className="top-bar">
@@ -183,22 +307,17 @@ function EditPage() {
         
         <Toolbar 
           activeTool={activeTool}
-          isErasing={isErasing}
           relationshipMode={relationshipMode}
           zoomLevel={zoomLevel}
           setTool={setTool}
           toggleEdit={handleToggleEdit}
-          toggleStyle={handleToggleStyle}
-          toggleEraser={toggleEraser}
           toggleRelationshipMode={toggleRelationshipMode}
           handleZoomIn={handleZoomIn}
           handleZoomOut={handleZoomOut}
-          resetZoom={resetZoom}
           onSave={handleSave}
           onLoad={handleLoad}
-          relationshipType={relationshipType}
-          setRelationshipType={setRelationshipType}
-         
+          isSaving={isSaving}
+          unsavedChanges={unsavedChanges}
         />
       </div>
       
@@ -210,16 +329,16 @@ function EditPage() {
       <RelationshipLayer
         elements={elements}
         selectedElements={selectedElements}
-        handleSelectElement={handleSelectElement}
+        handleSelectElement={enhancedHandleSelectElement}
         updateElement={updateElement}
-        removeElement={removeElement} // ✅ อย่าลืมส่ง
+        removeElement={removeElement}
       />
 
-      
       <StyleDropdown 
         isOpen={isStyleDropdownOpen}
         selectedElement={selectedElement} 
-        setCharacterType={(id, type) => updateElement(id, { characterType: type })}
+        relationshipType={relationshipType}
+        setRelationshipType={setRelationshipType}
       />
       
       <div className="main-content">
@@ -230,7 +349,7 @@ function EditPage() {
           zoomLevel={zoomLevel}
           isErasing={isErasing}
           relationshipMode={relationshipMode}
-          handleSelectElement={handleSelectElement}
+          handleSelectElement={enhancedHandleSelectElement}
           updateElement={updateElement}
           createRelationship={createRelationship}
           handleCanvasClick={handleCanvasClick}
@@ -247,23 +366,7 @@ function EditPage() {
         )}
       </div>
       
-      {/* Status bar - optional */}
-      <div className="status-bar">
-        <div className="status-info">
-          {relationshipMode && (
-            <span className="status-mode">Relationship Mode</span>
-          )}
-          {isErasing && (
-            <span className="status-mode">Eraser Mode</span>
-          )}
-          <span className="zoom-level">Zoom: {Math.round(zoomLevel * 100)}%</span>
-          {selectedElements.length > 0 && (
-            <span className="selection-info">
-              {selectedElements.length} item{selectedElements.length !== 1 ? 's' : ''} selected
-            </span>
-          )}
-        </div>
-      </div>
+      {/* Status bar - removed */}
     </div>
   );
 }

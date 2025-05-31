@@ -1,4 +1,5 @@
-import React from 'react';
+/* eslint-disable react/prop-types */
+// frontend/src/components/editpage-components/Toolbar.jsx
 import '../styles/editpage.css';
 import { 
   Pen, 
@@ -6,41 +7,42 @@ import {
   ZoomIn, 
   ZoomOut, 
   MousePointer, 
-  Eraser, 
-  Plus,
   Save,
-  Link
+  Link,
+  Loader
 } from "lucide-react";
 
 function Toolbar({ 
   activeTool,
-  isErasing,
   relationshipMode,
   zoomLevel,
   setTool,
   toggleEdit,
-  toggleStyle,
-  toggleEraser,
   toggleRelationshipMode,
   handleZoomIn,
   handleZoomOut,
-  setRelationshipType,
-  relationshipType
+  onSave,
+  onLoad,
+  isSaving,
+  unsavedChanges
 }) {
   return (
     <div className="toolbar">
       <button 
         className="tool-button folder-icon" 
-        title="Open File"
+        title="Back to Home"
+        onClick={onLoad}
       >
         <FolderOpen size={24} />
       </button>
       
       <button 
-        className="tool-button save-icon" 
-        title="Save"
+        className={`tool-button save-icon ${unsavedChanges ? 'unsaved' : ''}`}
+        title={unsavedChanges ? "Save (Unsaved changes)" : "Save"}
+        onClick={onSave}
+        disabled={isSaving}
       >
-        <Save size={24} />
+        {isSaving ? <Loader size={24} className="spinning" /> : <Save size={24} />}
       </button>
       
       <div className="toolbar-divider"></div>
@@ -61,14 +63,6 @@ function Toolbar({
         <Pen size={24} />
       </button>
       
-      {/* <button 
-        className={`tool-button style-icon ${activeTool === 'style' ? "active" : ""}`} 
-        onClick={toggleStyle}
-        title="Choose Character Style"
-      >
-        <Plus size={24} />
-      </button> */}
-      
       <button 
         className={`tool-button relationship-icon ${relationshipMode ? "active" : ""}`} 
         onClick={toggleRelationshipMode}
@@ -76,26 +70,6 @@ function Toolbar({
       >
         <Link size={24} />
       </button>
-      {relationshipMode && (
-        <select 
-          value={relationshipType} 
-          onChange={(e) => setRelationshipType(e.target.value)}
-        >
-          <option value="generic">Generic</option>
-          <option value="child-of">Child of</option>
-        </select>
-      )}
-
-
-
-      
-      {/* <button 
-        className={`tool-button eraser-icon ${isErasing ? "active eraser-active" : ""}`} 
-        onClick={toggleEraser}
-        title="Erase Elements"
-      >
-        <Eraser size={24} />
-      </button> */}
       
       <div className="toolbar-divider"></div>
       

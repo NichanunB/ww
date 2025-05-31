@@ -1,89 +1,112 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// frontend/src/pages/register.jsx
+import  { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../components/styles/login.css';
-import { Link } from 'lucide-react';
 
-function Register({ onLogin }) {
-    const [userName, setUserName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const navigate = useNavigate();
+function Register() {
+  const [userName, setUserName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { register } = useAuth();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
 
-        if (password !== confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
 
-        try {
-            const response = await axios.post('http://localhost:8080/api/register', {
-                user_name: userName,
-                email,
-                password,
-            });
-            setSuccess(response.data.message);
-            setError('');
-            navigate('/login'); // Redirect to login page after success
-        } catch (err) {
-            setError(err.response?.data?.error || 'Something went wrong.');
-        }
-    };
+    const result = await register({
+      user_name: userName,
+      email,
+      password,
+    });
 
-    const handleClose = () => {
-        // Close the login modal
-        
-        navigate('/');
-    };
-    return (
-        <div className="login-container">
-            <div className="login-box">
+    if (result.success) {
+      setSuccess('Registration successful! Please log in.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    } else {
+      setError(result.error);
+    }
+    
+    setIsLoading(false);
+  };
 
-                <div className="form-group">
-                    <h2>Sign up</h2>
-                    <form onSubmit={handleSubmit}>
-                        <label>Email</label>
-                        <input 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
-                        />
-                        <label>User name</label>
-                        <input 
-                            type="text" 
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)} 
-                            required 
-                        />
-                        <label>Password</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                        />
-                        <label>Comfirm password</label>
-                        <input 
-                            type="password" 
-                            value={confirmPassword} 
-                            onChange={(e) => setConfirmPassword(e.target.value)} 
-                            required 
-                        />
-                        <button className="login-btn" type="submit">Register</button>
-                    </form>
-                    <p>Have an account? <a href="/login">Log in</a></p>
-                    <button className="login-btn" onClick={handleClose}>
-                    back
-                    </button>
-                </div>
-            </div>
+  const handleClose = () => {
+    navigate('/');
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-box">
+        <div className="form-group">
+          <h2>Sign up</h2>
+          {error && <p className="error-message">{error}</p>}
+          {success && <p className="success-message">{success}</p>}
+          <form onSubmit={handleSubmit}>
+            <label>Username</label>
+            <input 
+              type="text" 
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
+            <label>Email</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
+            <label>Password</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
+            <label>Confirm password</label>
+            <input 
+              type="password" 
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
+            <button 
+              className="login-btn" 
+              type="submit" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Registering...' : 'Register'}
+            </button>
+          </form>
+          <p>
+            Have an account? <Link to="/login">Log in</Link>
+          </p>
+          <button className="login-btn" onClick={handleClose}>
+            Back
+          </button>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default Register;

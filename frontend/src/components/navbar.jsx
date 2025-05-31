@@ -1,28 +1,62 @@
+// frontend/src/components/navbar.jsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Menu, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 import "./styles/navbar.css";
 
-function Navbar({ isLoggedIn, onLogout }) {
+function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { isLoggedIn, logout, user } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Navigate to homepage with search query
+      navigate(`/?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setMenuOpen(false);
+    navigate('/');
+  };
 
   return (
     <nav className="navbar">
       <div className="logo">
-        <Link to="/">Logo</Link>
+        <Link to="/">NovelSync</Link>
       </div>
 
-      <div className="search-container">
-        <input type="text" placeholder="ค้นหา..." className="search-input" />
-        <Search className="search-icon" size={20} />
-      </div>
+      <form className="search-container" onSubmit={handleSearch}>
+        <input 
+          type="text" 
+          placeholder="ค้นหา..." 
+          className="search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button type="submit" className="search-button">
+          <Search className="search-icon" size={20} />
+        </button>
+      </form>
 
       <div className="nav-controls">
         {!isLoggedIn && (
           <div className="signin-icon">
             <Link to="/login">Sign In</Link>
+          </div>
+        )}
+
+        {isLoggedIn && user && (
+          <div className="user-info">
+            <span className="username">Hi, {user.user_name}</span>
           </div>
         )}
 
@@ -33,15 +67,21 @@ function Navbar({ isLoggedIn, onLogout }) {
       
       <div className={`menu-dropdown ${menuOpen ? "open" : ""}`}>
         <ul>
-          <li><Link to="/">Home</Link></li>
+          <li><Link to="/" onClick={() => setMenuOpen(false)}>Home</Link></li>
           {isLoggedIn && (
             <>
-              <li><Link to="/edit">Create</Link></li>
-              <li><Link to="/profile">Account</Link></li>
-              <li><button onClick={onLogout}>Logout</button></li>
+              <li><Link to="/edit" onClick={() => setMenuOpen(false)}>Create</Link></li>
+              <li><Link to="/profile" onClick={() => setMenuOpen(false)}>Account</Link></li>
+              <li><button onClick={handleLogout}>Logout</button></li>
             </>
           )}
-          <li><a href="#">Help</a></li>
+          {!isLoggedIn && (
+            <>
+              <li><Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link></li>
+              <li><Link to="/register" onClick={() => setMenuOpen(false)}>Register</Link></li>
+            </>
+          )}
+          <li><a href="#" onClick={() => setMenuOpen(false)}>Help</a></li>
         </ul>
       </div>
     </nav>

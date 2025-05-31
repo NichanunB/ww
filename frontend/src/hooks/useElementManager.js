@@ -1,3 +1,4 @@
+// frontend/src/hooks/useElementManager.js
 import { useState, useRef } from 'react';
 import { generateId } from '../utils/helpers';
 import { ELEMENT_TYPES } from '../constants/elementTypes';
@@ -131,7 +132,6 @@ export default function useElementManager(canvasRef) {
         }
       }
     } else {
-      // ✅ Always select (don't toggle off)
       setSelectedElements([id]);
     }
   };
@@ -159,31 +159,6 @@ export default function useElementManager(canvasRef) {
     fileInputRef.current.click();
   };
 
-  const saveProject = (project) => {
-    try {
-      localStorage.setItem('characterDiagram', JSON.stringify(project));
-      return true;
-    } catch (e) {
-      console.error('Failed to save project', e);
-      return false;
-    }
-  };
-
-  const loadProject = () => {
-    try {
-      const saved = localStorage.getItem('characterDiagram');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setElements(parsed.elements || []);
-        return parsed.name;
-      }
-      return null;
-    } catch (e) {
-      console.error('Failed to load project', e);
-      return null;
-    }
-  };
-
   const clearSelection = () => {
     setSelectedElements([]);
   };
@@ -196,10 +171,17 @@ export default function useElementManager(canvasRef) {
     return elements.find(el => selectedElements[0] === el.id);
   };
 
+  // New function to set elements (used when loading project)
+  const setElementsFromProject = (newElements) => {
+    setElements(newElements);
+    setSelectedElements([]);
+  };
+
   return {
     elements,
     selectedElements,
     selectedElement: getSelectedElement(),
+    setElements: setElementsFromProject, // Expose this for loading projects
     addElement,
     updateElement,
     removeElement,
@@ -209,7 +191,5 @@ export default function useElementManager(canvasRef) {
     clearSelection,
     setCharacterType,
     triggerImageUpload,
-    saveProject,
-    loadProject
   };
 }
