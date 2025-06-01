@@ -1,4 +1,3 @@
-// frontend/src/hooks/useElementManager.js
 import { useState, useRef } from 'react';
 import { generateId } from '../utils/helpers';
 import { ELEMENT_TYPES } from '../constants/elementTypes';
@@ -171,17 +170,29 @@ export default function useElementManager(canvasRef) {
     return elements.find(el => selectedElements[0] === el.id);
   };
 
-  // New function to set elements (used when loading project)
   const setElementsFromProject = (newElements) => {
     setElements(newElements);
     setSelectedElements([]);
+  };
+
+  // ✅ เพิ่มฟังก์ชันนี้
+  const getRelationshipStats = () => {
+    const relationships = elements.filter(el => el.type === ELEMENT_TYPES.RELATIONSHIP);
+    return {
+      totalRelationships: relationships.length,
+      types: relationships.reduce((acc, rel) => {
+        const type = rel.relationshipType || 'unknown';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {})
+    };
   };
 
   return {
     elements,
     selectedElements,
     selectedElement: getSelectedElement(),
-    setElements: setElementsFromProject, // Expose this for loading projects
+    setElements: setElementsFromProject,
     addElement,
     updateElement,
     removeElement,
@@ -191,5 +202,6 @@ export default function useElementManager(canvasRef) {
     clearSelection,
     setCharacterType,
     triggerImageUpload,
+    getRelationshipStats // ✅ คืนค่าออกไปให้ใช้ใน editpage.jsx
   };
 }

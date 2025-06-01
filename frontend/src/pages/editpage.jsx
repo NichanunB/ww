@@ -59,9 +59,8 @@ function EditPage() {
     toggleEraser,
     toggleRelationshipMode,
     handleZoomIn,
-    handleZoomOut  } = useToolManager();
-
-  // Count characters for relationship mode
+    handleZoomOut
+  } = useToolManager();
 
   // Check authentication
   useEffect(() => {
@@ -71,7 +70,7 @@ function EditPage() {
     }
   }, [isLoggedIn, navigate]);
 
-  // Load project if editing existing project
+  // ✅ Fixed: removed setElements from dependencies
   useEffect(() => {
     const loadProject = async () => {
       if (projectId && isLoggedIn) {
@@ -83,20 +82,16 @@ function EditPage() {
           setCurrentProject(project);
           setProjectName(project.title);
           
-          // Parse project data if it exists
           if (project.project_data) {
-            let projectData;
-            if (typeof project.project_data === 'string') {
-              projectData = JSON.parse(project.project_data);
-            } else {
-              projectData = project.project_data;
-            }
-            
+            const projectData = typeof project.project_data === 'string'
+              ? JSON.parse(project.project_data)
+              : project.project_data;
+
             if (projectData.elements) {
               setElements(projectData.elements);
             }
           }
-          
+
           setUnsavedChanges(false);
         } catch (error) {
           console.error('Error loading project:', error);
@@ -109,16 +104,14 @@ function EditPage() {
     };
 
     loadProject();
-  }, [projectId, isLoggedIn, navigate, setElements]);
+  }, [projectId, isLoggedIn, navigate]); // ❌ ลบ setElements ออก
 
-  // Track unsaved changes
   useEffect(() => {
     if (currentProject) {
       setUnsavedChanges(true);
     }
   }, [elements, projectName]);
 
-  // Auto-save every 30 seconds
   useEffect(() => {
     if (!currentProject || !unsavedChanges) return;
 
@@ -131,21 +124,19 @@ function EditPage() {
           console.error('Auto-save failed:', error);
         }
       }
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(autoSaveInterval);
   }, [currentProject, unsavedChanges, elements]);
 
   useEffect(() => {
-    // Handle escape key to clear selection
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         clearSelection();
         if (isErasing) toggleEraser();
         if (relationshipMode) toggleRelationshipMode();
       }
-      
-      // Handle keyboard shortcuts
+
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 's') {
           e.preventDefault();
@@ -159,8 +150,7 @@ function EditPage() {
         }
       }
     };
-    
-    // Handle clicks outside the canvas
+
     const handleClickOutside = (event) => {
       const isToolbarClick = event.target.closest('.toolbar');
       const isPropertyPanelClick = event.target.closest('.property-panel');
@@ -172,11 +162,6 @@ function EditPage() {
       }
     };
 
-    // Add event listeners
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Prompt user before leaving with unsaved changes
     const handleBeforeUnload = (e) => {
       if (unsavedChanges) {
         e.preventDefault();
@@ -184,8 +169,11 @@ function EditPage() {
         return e.returnValue;
       }
     };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
@@ -193,7 +181,6 @@ function EditPage() {
     };
   }, [isErasing, relationshipMode, unsavedChanges, clearSelection, toggleEraser, toggleRelationshipMode, selectedElement]);
 
-  // Handle saving the project
   const handleSave = async () => {
     if (!isLoggedIn) {
       alert('You must be logged in to save projects.');
@@ -212,7 +199,6 @@ function EditPage() {
       };
 
       if (currentProject) {
-        // Update existing project
         const updates = {
           title: projectName,
           project_data: JSON.stringify(projectData)
@@ -223,7 +209,6 @@ function EditPage() {
         
         alert('Project saved successfully!');
       } else {
-        // Create new project
         const newProjectData = {
           title: projectName,
           description: null,
@@ -234,12 +219,10 @@ function EditPage() {
         const newProject = response.data.data || response.data;
         setCurrentProject(newProject);
         
-        // Update URL to include project ID
         navigate(`/edit/${newProject.id}`, { replace: true });
-        
         alert('Project created and saved successfully!');
       }
-      
+
       setUnsavedChanges(false);
     } catch (error) {
       console.error('Error saving project:', error);
@@ -249,38 +232,32 @@ function EditPage() {
     }
   };
 
-  // Handle loading a project (placeholder for file upload)
   const handleLoad = () => {
     navigate('/');
   };
 
-  // Toggle functions to manage dropdown state
   const handleToggleEdit = () => {
     setIsEditDropdownOpen(!isEditDropdownOpen);
     setIsStyleDropdownOpen(false);
     toggleEdit();
   };
 
-
   const handleCanvasClick = () => {
     setIsEditDropdownOpen(false);
     setIsStyleDropdownOpen(false);
   };
 
-  // Wrap addElement to close dropdown after adding
   const handleAddElement = (type) => (e) => {
     const newElement = addElement(type)(e);
     setIsEditDropdownOpen(false);
     return newElement;
   };
 
-  // Handle project name change
   const handleProjectNameChange = (newName) => {
     setProjectName(newName);
     setUnsavedChanges(true);
   };
 
-  // Enhanced handleSelectElement to pass relationshipType
   const enhancedHandleSelectElement = (id, options = {}) => {
     handleSelectElement(id, { ...options, relationshipType });
   };
@@ -365,8 +342,6 @@ function EditPage() {
           />
         )}
       </div>
-      
-      {/* Status bar - removed */}
     </div>
   );
 }

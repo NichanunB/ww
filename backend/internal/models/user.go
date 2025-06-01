@@ -1,3 +1,4 @@
+// backend/internal/models/user.go
 package models
 
 import (
@@ -39,6 +40,6 @@ type UserProfile struct {
 }
 
 type UpdateProfileRequest struct {
-    UserName     *string `json:"user_name,omitempty"`
+    UserName     *string `json:"user_name,omitempty" binding:"omitempty,min=2,max=50"`
     ProfileImage *string `json:"profile_image,omitempty"`
 }

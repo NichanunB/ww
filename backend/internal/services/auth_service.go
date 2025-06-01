@@ -1,3 +1,4 @@
+// backend/internal/services/auth_service.go
 package services
 
 import (
@@ -179,6 +180,13 @@ func (s *AuthService) GetUserProfile(id int) (*models.UserProfile, error) {
 }
 
 func (s *AuthService) UpdateProfile(userID int, req models.UpdateProfileRequest) (*models.UserProfile, error) {
+    // Check if user exists
+    _, err := s.GetUserByID(userID)
+    if err != nil {
+        fmt.Printf("UpdateProfile - User not found: %v\n", err)
+        return nil, err
+    }
+
     // Build dynamic query based on provided fields
     setParts := []string{}
     args := []interface{}{}
@@ -186,31 +194,52 @@ func (s *AuthService) UpdateProfile(userID int, req models.UpdateProfileRequest)
     if req.UserName != nil {
         setParts = append(setParts, "user_name = ?")
         args = append(args, *req.UserName)
+        fmt.Printf("UpdateProfile - Updating username to: %s\n", *req.UserName)
     }
 
     if req.ProfileImage != nil {
         setParts = append(setParts, "profile_image = ?")
         args = append(args, *req.ProfileImage)
+        fmt.Printf("UpdateProfile - Updating profile image (length: %d)\n", len(*req.ProfileImage))
     }
 
     if len(setParts) == 0 {
+        fmt.Printf("UpdateProfile - No fields to update\n")
         return s.GetUserProfile(userID)
     }
 
-    // Add updated_at
+    // Add updated_at and user ID
     setParts = append(setParts, "updated_at = NOW()")
     args = append(args, userID)
 
+    // Construct the query
     query := fmt.Sprintf("UPDATE users SET %s WHERE id = ?", 
-        fmt.Sprintf("%s", setParts[0]))
-    for i := 1; i < len(setParts); i++ {
-        query = fmt.Sprintf("%s, %s", query, setParts[i])
-    }
+        joinStrings(setParts, ", "))
 
-    _, err := s.db.Exec(query, args...)
+    fmt.Printf("UpdateProfile - Executing query: %s with args: %v\n", query, args)
+
+    _, err = s.db.Exec(query, args...)
     if err != nil {
+        fmt.Printf("UpdateProfile - Database error: %v\n", err)
         return nil, fmt.Errorf("error updating profile: %w", err)
     }
 
+    fmt.Printf("UpdateProfile - Successfully updated profile\n")
     return s.GetUserProfile(userID)
+}
+
+// Helper function to join strings
+func joinStrings(strs []string, sep string) string {
+    if len(strs) == 0 {
+        return ""
+    }
+    if len(strs) == 1 {
+        return strs[0]
+    }
+    
+    result := strs[0]
+    for i := 1; i < len(strs); i++ {
+        result += sep + strs[i]
+    }
+    return result
 }

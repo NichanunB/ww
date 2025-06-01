@@ -1,3 +1,4 @@
+// backend/internal/services/project_service.go
 package services
 
 import (
@@ -14,12 +15,33 @@ type ProjectService struct {
 	db *sql.DB
 }
 
-func (s *ProjectService) GetPublicProjectByID(projectID int) error {
-	panic("unimplemented")
-}
-
 func NewProjectService(db *sql.DB) *ProjectService {
 	return &ProjectService{db: db}
+}
+
+func (s *ProjectService) GetPublicProjectByID(projectID int) *models.Project {
+	// Implementation for getting public project by ID
+	var project models.Project
+	err := s.db.QueryRow(`
+        SELECT id, user_id, title, description, cover_image, project_data, created_at, updated_at
+        FROM projects 
+        WHERE id = ?
+    `, projectID).Scan(
+		&project.ID,
+		&project.UserID,
+		&project.Title,
+		&project.Description,
+		&project.CoverImage,
+		&project.ProjectData,
+		&project.CreatedAt,
+		&project.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil
+	}
+
+	return &project
 }
 
 func (s *ProjectService) CreateProject(userID int, req models.CreateProjectRequest) (*models.Project, error) {

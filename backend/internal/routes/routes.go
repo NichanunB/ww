@@ -1,3 +1,4 @@
+// backend/internal/routes/routes.go
 package routes
 
 import (
@@ -51,7 +52,7 @@ func SetupRoutes(router *gin.Engine, db *sql.DB, cfg *config.Config) {
             user := protected.Group("/user")
             {
                 user.GET("/profile", authHandler.GetProfile)
-                user.PUT("/profile", authHandler.UpdateProfile)
+                user.PUT("/profile", authHandler.UpdateProfile) // ✅ เพิ่ม PUT handler
                 user.POST("/logout", authHandler.Logout)
                 user.GET("/validate", authHandler.ValidateToken)
             }

@@ -1,5 +1,5 @@
 // frontend/src/context/AuthContext.jsx
-import  { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -74,6 +74,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // New function to update user profile
+  const updateUserProfile = async (updates) => {
+    try {
+      const response = await authAPI.updateProfile(updates);
+      const updatedUser = response.data.data;
+      setUser(updatedUser);
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Profile update failed'
+      };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_id');
@@ -88,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUserProfile,
   };
 
   return (

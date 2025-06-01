@@ -1,6 +1,8 @@
+// backend/internal/handlers/auth.go
 package handlers
 
 import (
+    "fmt"
     "net/http"
     "backend/internal/middleware"
     "backend/internal/models"
@@ -103,6 +105,8 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 
     var req models.UpdateProfileRequest
     if err := c.ShouldBindJSON(&req); err != nil {
+        // Log the error for debugging
+        fmt.Printf("JSON binding error: %v\n", err)
         c.JSON(http.StatusBadRequest, models.ErrorResponse{
             Error:   "invalid_request",
             Message: err.Error(),
@@ -110,8 +114,13 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
         return
     }
 
+    // Log the request for debugging
+    fmt.Printf("UpdateProfile request - UserID: %d, Request: %+v\n", userID, req)
+
     profile, err := h.authService.UpdateProfile(userID, req)
     if err != nil {
+        // Log the error for debugging
+        fmt.Printf("UpdateProfile service error: %v\n", err)
         c.JSON(http.StatusInternalServerError, models.ErrorResponse{
             Error:   "update_failed",
             Message: err.Error(),
