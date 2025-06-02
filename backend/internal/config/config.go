@@ -65,7 +65,7 @@ func Load() *Config {
             Secret: getEnv("JWT_SECRET", "your-default-secret-change-this"),
         },
         CORS: CORSConfig{
-            AllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"), ","),
+            AllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,https://novelsync-frontend.onrender.com"), ","),
             AllowedMethods: strings.Split(getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"), ","),
             AllowedHeaders: strings.Split(getEnv("CORS_ALLOWED_HEADERS", "Origin,Content-Type,Accept,Authorization,X-Requested-With"), ","),
         },
