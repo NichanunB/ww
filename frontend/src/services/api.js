@@ -1,7 +1,7 @@
 // frontend/src/services/api.js
 import axios from 'axios';
 
-const API_BASE_URL = 'https://novelsync-2q34.onrender.com';
+const API_BASE_URL = 'https://novelsync-2q34.onrender.com/api';
 
 // Create axios instance with default config
 const api = axios.create({
