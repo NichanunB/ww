@@ -1,0 +1,127 @@
+/* Navbar.css */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #AD8B73;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+}
+
+
+/* Updated positioning for signin-icon */
+.signin-icon a {
+  color: #FFFBE9;
+  font-weight: 500;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+/* New nav-controls container */
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.menu-icon {
+  cursor: pointer;
+  color: #FFFBE9;
+  z-index: 101;
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 200px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 99;
+}
+
+.menu-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-dropdown li {
+  padding: 0;
+}
+
+.menu-dropdown li a,
+.menu-dropdown li button {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  color: #333;
+  text-decoration: none;
+  font-size: 0.9rem;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menu-dropdown li button {
+  color: #e53e3e;
+}
+
+.menu-dropdown li a:hover,
+.menu-dropdown li button:hover {
+  background-color: #f7fafc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+  
+  .search-container {
+    margin: 0 1rem;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-container {
+    display: none;
+  }
+}
+
+/* User Info */
+.user-info {
+  text-align: center;
+  color: #333;
+  padding: 10px;
+  background-color: #FFFBE9;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 200px;
+}
