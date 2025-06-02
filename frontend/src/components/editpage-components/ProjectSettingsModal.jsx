@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable react/prop-types */
 // frontend/src/components/editpage-components/ProjectSettingsModal.jsx
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ function ProjectSettingsModal({
   const [coverImage, setCoverImage] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Initialize state when project loads
   useEffect(() => {
     if (project) {
       setTitle(project.title || 'Untitled Character Diagram');
@@ -26,13 +28,28 @@ function ProjectSettingsModal({
     }
   }, [project]);
 
+  // Check for changes - ✅ แก้ไขการตัดสินใจว่ามีการเปลี่ยนแปลงหรือไม่
   useEffect(() => {
-    // Check if any field has changed
     if (project) {
-      const changed = 
-        title !== (project.title || 'Untitled Character Diagram') ||
-        description !== (project.description || '') ||
-        coverImage !== (project.cover_image || null);
+      const originalTitle = project.title || 'Untitled Character Diagram';
+      const originalDescription = project.description || '';
+      const originalCoverImage = project.cover_image || null;
+      
+      const titleChanged = title !== originalTitle;
+      const descriptionChanged = description !== originalDescription;
+      const coverImageChanged = coverImage !== originalCoverImage;
+      
+      const changed = titleChanged || descriptionChanged || coverImageChanged;
+      
+      console.log('Checking changes:', {
+        titleChanged,
+        descriptionChanged,
+        coverImageChanged,
+        changed,
+        currentCover: coverImage,
+        originalCover: originalCoverImage
+      });
+      
       setHasChanges(changed);
     }
   }, [title, description, coverImage, project]);
@@ -43,6 +60,8 @@ function ProjectSettingsModal({
       description: description.trim() || null,
       cover_image: coverImage
     };
+    
+    console.log('Saving updates:', updates);
     
     await onSave(updates);
     onClose();
@@ -56,6 +75,12 @@ function ProjectSettingsModal({
       setCoverImage(project.cover_image || null);
     }
     onClose();
+  };
+
+  // ✅ เพิ่มฟังก์ชันสำหรับจัดการการเปลี่ยนแปลงรูปภาพ
+  const handleImageChange = (newImage) => {
+    console.log('Image changed:', newImage);
+    setCoverImage(newImage);
   };
 
   if (!isOpen) return null;
@@ -76,7 +101,7 @@ function ProjectSettingsModal({
             <h3 className="section-title">Cover Image</h3>
             <CoverImageUpload
               coverImage={coverImage}
-              onImageChange={setCoverImage}
+              onImageChange={handleImageChange}
               isLoading={isLoading}
             />
           </div>
@@ -128,6 +153,27 @@ function ProjectSettingsModal({
             {isLoading ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
+
+        {/* ✅ Debug info - ลบออกได้เมื่อแก้ไขเสร็จ */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ 
+            position: 'absolute', 
+            bottom: '-100px', 
+            left: '0', 
+            background: '#000', 
+            color: '#fff', 
+            padding: '10px', 
+            fontSize: '12px',
+            borderRadius: '4px',
+            width: '100%'
+          }}>
+            <div>Has Changes: {hasChanges ? 'YES' : 'NO'}</div>
+            <div>Title: {title}</div>
+            <div>Original Title: {project?.title}</div>
+            <div>Cover Image: {coverImage ? 'YES' : 'NO'}</div>
+            <div>Original Cover: {project?.cover_image ? 'YES' : 'NO'}</div>
+          </div>
+        )}
       </div>
     </div>
   );

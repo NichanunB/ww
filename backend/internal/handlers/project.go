@@ -100,17 +100,8 @@ func (h *ProjectHandler) GetAllProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, projects)
 }
 
-// GetProject handles GET /projects/:id
+// ✅ GetProject - รองรับทั้ง owner และ public access
 func (h *ProjectHandler) GetProject(c *gin.Context) {
-	userID, exists := middleware.GetUserID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
-			Error:   "unauthorized",
-			Message: "User not authenticated",
-		})
-		return
-	}
-
 	projectIDStr := c.Param("id")
 	projectID, err := strconv.Atoi(projectIDStr)
 	if err != nil {
@@ -121,11 +112,26 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 		return
 	}
 
-	project, err := h.projectService.GetProjectByID(projectID, userID)
-	if err != nil {
+	// ถ้ามี user authentication
+	if userID, exists := middleware.GetUserID(c); exists {
+		// ลองดูว่าเป็นเจ้าของโปรเจกต์หรือไม่
+		project, err := h.projectService.GetProjectByID(projectID, userID)
+		if err == nil {
+			// เป็นเจ้าของ - ส่งข้อมูลเต็ม
+			c.JSON(http.StatusOK, models.SuccessResponse{
+				Message: "Project retrieved successfully",
+				Data:    project,
+			})
+			return
+		}
+	}
+
+	// ไม่ใช่เจ้าของหรือไม่ได้ login - ใช้ public access
+	project := h.projectService.GetPublicProjectByID(projectID)
+	if project == nil {
 		c.JSON(http.StatusNotFound, models.ErrorResponse{
 			Error:   "project_not_found",
-			Message: err.Error(),
+			Message: "Project not found or private",
 		})
 		return
 	}
@@ -166,11 +172,11 @@ func (h *ProjectHandler) UpdateProject(c *gin.Context) {
 		return
 	}
 
-	log.Println("🔍 UpdateProjectRequest:", req) // ✅ Debug จุดนี้
+	log.Println("🔍 UpdateProjectRequest:", req)
 
 	project, err := h.projectService.UpdateProject(projectID, userID, req)
 	if err != nil {
-		log.Println("❌ UpdateProject error:", err) // ✅ Log error ก่อนส่งกลับ
+		log.Println("❌ UpdateProject error:", err)
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
 			Error:   "update_failed",
 			Message: err.Error(),
@@ -324,7 +330,7 @@ func (h *ProjectHandler) AutoSave(c *gin.Context) {
 	})
 }
 
-// GetPublicProject handles GET /projects/public/:id
+// ✅ GetPublicProject handles GET /projects/public/:id
 func (h *ProjectHandler) GetPublicProject(c *gin.Context) {
 	projectIDStr := c.Param("id")
 	projectID, err := strconv.Atoi(projectIDStr)

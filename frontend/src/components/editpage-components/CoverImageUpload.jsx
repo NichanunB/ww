@@ -1,5 +1,5 @@
 // frontend/src/components/editpage-components/CoverImageUpload.jsx
-import  { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, X } from 'lucide-react';
 import './coverimage.css';
 
@@ -8,6 +8,11 @@ function CoverImageUpload({ coverImage, onImageChange, isLoading }) {
   const [previewUrl, setPreviewUrl] = useState(coverImage || null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  // ✅ อัปเดต preview เมื่อ coverImage prop เปลี่ยน
+  useEffect(() => {
+    setPreviewUrl(coverImage || null);
+  }, [coverImage]);
 
   const handleFileSelect = (file) => {
     if (!file) return;
@@ -24,12 +29,18 @@ function CoverImageUpload({ coverImage, onImageChange, isLoading }) {
       return;
     }
 
-    // Create preview
+    // Create preview and notify parent
     const reader = new FileReader();
     reader.onload = (e) => {
       const imageData = e.target.result;
+      console.log('File selected, updating preview and parent:', imageData.substring(0, 50) + '...');
+      
       setPreviewUrl(imageData);
-      onImageChange(imageData);
+      
+      // ✅ เรียก onImageChange ทันทีเมื่ออ่านไฟล์เสร็จ
+      if (onImageChange) {
+        onImageChange(imageData);
+      }
     };
     reader.readAsDataURL(file);
   };
@@ -62,8 +73,13 @@ function CoverImageUpload({ coverImage, onImageChange, isLoading }) {
   };
 
   const removeCoverImage = () => {
+    console.log('Removing cover image');
     setPreviewUrl(null);
-    onImageChange(null);
+    
+    // ✅ เรียก onImageChange ด้วย null เมื่อลบรูป
+    if (onImageChange) {
+      onImageChange(null);
+    }
   };
 
   return (

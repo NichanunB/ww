@@ -1,14 +1,16 @@
 // frontend/src/pages/projectview.jsx
-import  { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { projectAPI } from '../services/api';
 import '../components/styles/editpage.css';
 import '../components/styles/projectview.css';
 
-// Components (read-only versions)
+// Components
 import Canvas from '../components/editpage-components/Canvas';
 import RelationshipLayer from '../components/editpage-components/RelationshipLayer';
+import ReadOnlyPropertyPanel from '../components/editpage-components/ReadOnlyPropertyPanel';
+import ViewOnlyToolbar from '../components/editpage-components/ViewOnlyToolbar';
 
 function ProjectView() {
   const { projectId } = useParams();
@@ -21,13 +23,13 @@ function ProjectView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [selectedElement, setSelectedElement] = useState(null);
 
   useEffect(() => {
     const loadProject = async () => {
       try {
         const response = await projectAPI.getProject(projectId);
         const projectData = response.data.data || response.data;
-        
         setProject(projectData);
         
         if (projectData.project_data) {
@@ -65,33 +67,20 @@ function ProjectView() {
     setZoomLevel((prevZoom) => Math.max(prevZoom - 0.1, 0.5));
   };
 
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
   const handleEditProject = () => {
     if (isOwner) {
       navigate(`/edit/${projectId}`);
     }
   };
 
-  const handleBackToHome = () => {
-    navigate('/');
-  };
-
-  const getDefaultCover = () => {
-    const colors = ['#AD8B73', '#CEAB93', '#E3CAA5', '#FFFBE9', '#A8DADC', '#457B9D', '#1D3557'];
-    const colorIndex = parseInt(projectId) % colors.length;
-    const backgroundColor = colors[colorIndex];
-
-    const titleChar = project?.title?.charAt(0)?.toUpperCase() || 'P';
-    const svgCover = `
-      <svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
-        <rect width="400" height="200" fill="${backgroundColor}"/>
-        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" 
-              font-family="Arial, sans-serif" font-size="24" fill="white">
-          ${titleChar}
-        </text>
-      </svg>
-    `;
-    const encoded = encodeURIComponent(svgCover);
-    return `data:image/svg+xml;base64,${btoa(unescape(encoded))}`;
+  // ✅ Handle element selection for viewing properties (read-only)
+  const handleElementSelect = (elementId) => {
+    const element = elements.find(el => el.id === elementId);
+    setSelectedElement(element);
   };
 
   if (isLoading) {
@@ -121,131 +110,58 @@ function ProjectView() {
 
   return (
     <div className="edit-page project-view-mode">
-      {project?.cover_image && (
-        <div className="project-cover-header">
-          <img 
-            src={project.cover_image} 
-            alt={project.title}
-            onError={(e) => {
-              e.target.src = getDefaultCover();
-            }}
-          />
-          <div className="cover-overlay">
-            <div className="project-info">
-              <h1>{project?.title || 'Untitled Project'}</h1>
-              <p className="project-author">
-                by {project?.authorName || 'Unknown Author'}
-              </p>
-              {project?.description && (
-                <p className="project-description">{project.description}</p>
-              )}
-            </div>
-          </div>
+      {/* ✅ View-Only Banner */}
+      {!isOwner && (
+        <div className="view-only-banner">
+          <span>👁️ View Only Mode - No editing allowed</span>
         </div>
       )}
 
-      {!project?.cover_image && (
-        <div className="project-view-header">
-          <div className="project-info">
-            <h1>{project?.title || 'Untitled Project'}</h1>
-            <p className="project-author">
-              by {project?.authorName || 'Unknown Author'}
-            </p>
-            {project?.description && (
-              <p className="project-description">{project.description}</p>
-            )}
-          </div>
-          
-          <div className="project-actions">
-            <button onClick={handleBackToHome} className="action-button">
-              ← Back to Home
-            </button>
-            
-            {isOwner && (
-              <button onClick={handleEditProject} className="action-button edit-button">
-                Edit Project
-              </button>
-            )}
-          </div>
+      {/* ✅ Project Title Bar */}
+      <div className="top-bar">
+        <div className="project-name-container">
+          <h2 className="project-name-text">{project?.title || 'Untitled Character Diagram'}</h2>
         </div>
-      )}
-
-      {project?.cover_image && (
-        <div className="project-actions-bar">
-          <button onClick={handleBackToHome} className="action-button">
-            ← Back to Home
-          </button>
-          
-          {isOwner && (
-            <button onClick={handleEditProject} className="action-button edit-button">
-              Edit Project
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="view-controls">
-        <button onClick={handleZoomOut} className="zoom-button" title="Zoom Out">
-          -
-        </button>
-        <span className="zoom-display">{Math.round(zoomLevel * 100)}%</span>
-        <button onClick={handleZoomIn} className="zoom-button" title="Zoom In">
-          +
-        </button>
+        
+        {/* ✅ View-Only Toolbar */}
+        <ViewOnlyToolbar 
+          zoomLevel={zoomLevel}
+          handleZoomIn={handleZoomIn}
+          handleZoomOut={handleZoomOut}
+          onBackToHome={handleBackToHome}
+          onEditProject={isOwner ? handleEditProject : null}
+          isOwner={isOwner}
+        />
       </div>
       
-      <div className="main-content view-mode">
-        <RelationshipLayer
-          elements={elements}
-          selectedElements={[]}
-          handleSelectElement={() => {}}
-          updateElement={() => {}}
-          removeElement={() => {}}
-        />
-
+      <div className="main-content">
         <Canvas 
           canvasRef={canvasRef}
           elements={elements} 
-          selectedElements={[]}
+          selectedElements={selectedElement ? [selectedElement.id] : []}
           zoomLevel={zoomLevel}
           isErasing={false}
           relationshipMode={false}
-          handleSelectElement={() => {}}
-          updateElement={() => {}}
-          createRelationship={() => {}}
-          handleCanvasClick={() => {}}
-          readOnly={true}
+          handleSelectElement={handleElementSelect}
+          updateElement={() => {}} // ✅ ปิดการแก้ไข
+          createRelationship={() => {}} // ✅ ปิดการสร้าง relationship
+          handleCanvasClick={() => setSelectedElement(null)}
         />
-      </div>
-      
-      <div className="project-view-info">
-        <div className="project-stats">
-          <div className="stat">
-            <span className="stat-label">Characters:</span>
-            <span className="stat-value">
-              {elements.filter(el => el.type === 'circle').length}
-            </span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Relationships:</span>
-            <span className="stat-value">
-              {elements.filter(el => el.type === 'relationship').length}
-            </span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Text Boxes:</span>
-            <span className="stat-value">
-              {elements.filter(el => el.type === 'textbox').length}
-            </span>
-          </div>
-        </div>
+
+        <RelationshipLayer
+          elements={elements}
+          selectedElements={selectedElement ? [selectedElement.id] : []}
+          handleSelectElement={handleElementSelect}
+          updateElement={() => {}} // ✅ ปิดการแก้ไข
+          removeElement={() => {}} // ✅ ปิดการลบ
+        />
         
-        {!isLoggedIn && (
-          <div className="login-prompt">
-            <p>
-              <a href="/login">Login</a> to create your own character diagrams!
-            </p>
-          </div>
+        {/* ✅ Read-Only Property Panel */}
+        {selectedElement && (
+          <ReadOnlyPropertyPanel 
+            selectedElement={selectedElement}
+            projectAuthor={project?.authorName || 'Unknown Author'}
+          />
         )}
       </div>
     </div>

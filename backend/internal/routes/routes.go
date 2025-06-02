@@ -35,6 +35,9 @@ func SetupRoutes(router *gin.Engine, db *sql.DB, cfg *config.Config) {
             // Public project routes (for homepage)
             public.GET("/projects", projectHandler.GetAllProjects)
             
+            // ✅ เพิ่ม public project view route
+            public.GET("/projects/public/:id", projectHandler.GetPublicProject)
+            
             // Health check
             public.GET("/ping", func(c *gin.Context) {
                 c.JSON(http.StatusOK, gin.H{
@@ -52,7 +55,7 @@ func SetupRoutes(router *gin.Engine, db *sql.DB, cfg *config.Config) {
             user := protected.Group("/user")
             {
                 user.GET("/profile", authHandler.GetProfile)
-                user.PUT("/profile", authHandler.UpdateProfile) // ✅ เพิ่ม PUT handler
+                user.PUT("/profile", authHandler.UpdateProfile)
                 user.POST("/logout", authHandler.Logout)
                 user.GET("/validate", authHandler.ValidateToken)
             }
@@ -63,7 +66,6 @@ func SetupRoutes(router *gin.Engine, db *sql.DB, cfg *config.Config) {
                 // CRUD operations
                 projects.POST("", projectHandler.CreateProject)
                 projects.GET("/my", projectHandler.GetProjects) // Get user's projects
-                projects.GET("/:id", projectHandler.GetProject)
                 projects.PUT("/:id", projectHandler.UpdateProject)
                 projects.DELETE("/:id", projectHandler.DeleteProject)
                 
@@ -73,13 +75,15 @@ func SetupRoutes(router *gin.Engine, db *sql.DB, cfg *config.Config) {
             }
         }
 
-        // Optional authenticated routes (work with or without auth)
+        // ✅ Optional authenticated routes (work with or without auth)
         optional := v1.Group("")
         optional.Use(middleware.OptionalAuthMiddleware(authService))
         {
+            // ✅ Project access route - ใช้ได้ทั้งแบบ login และไม่ login
+            optional.GET("/projects/:id", projectHandler.GetProject)
+            
             // Routes that provide different responses based on authentication
             optional.GET("/projects/featured", func(c *gin.Context) {
-                // This could show different content for authenticated vs non-authenticated users
                 projects, err := projectService.GetAllProjects()
                 if err != nil {
                     c.JSON(http.StatusInternalServerError, models.ErrorResponse{

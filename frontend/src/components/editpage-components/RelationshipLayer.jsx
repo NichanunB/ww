@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // frontend/src/components/editpage-components/RelationshipLayer.jsx
 import PropTypes from 'prop-types';
 import { calculateRelationshipPosition } from '../../utils/helpers';

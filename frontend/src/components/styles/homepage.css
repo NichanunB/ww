@@ -59,6 +59,7 @@
   width: 100%;
   overflow: hidden;
   background-color: #e0e0e0;
+  position: relative; /* ✅ เพิ่มเพื่อให้ badge อยู่ในตำแหน่งที่ถูกต้อง */
 }
 
 .project-cover img {
@@ -70,6 +71,43 @@
 
 .item:hover .project-cover img {
   transform: scale(1.05);
+}
+
+/* ✅ เพิ่ม styles สำหรับ project badges */
+.project-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+.owner-badge {
+  background-color: #28a745;
+  color: white;
+}
+
+.view-badge {
+  background-color: #6c757d;
+  color: white;
+}
+
+.project-badge:before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  border-radius: inherit;
+  z-index: -1;
 }
 
 .project-info {
@@ -125,7 +163,7 @@
   font-size: 16px;
   outline: none;
   transition: border-color 0.3s ease;
-  background-color: #fff;;
+  background-color: #fff;
   color: #333;
 }
 
@@ -169,6 +207,19 @@
   font-style: italic;
 }
 
+/* ✅ เพิ่ม hover effects สำหรับ badges */
+.item:hover .project-badge {
+  transform: scale(1.05);
+}
+
+.owner-badge:hover {
+  background-color: #218838;
+}
+
+.view-badge:hover {
+  background-color: #5a6268;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .homepage {
@@ -201,6 +252,13 @@
   .project-author {
     font-size: 12px;
   }
+
+  .project-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    top: 6px;
+    right: 6px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -215,5 +273,10 @@
   
   .project-search-input {
     font-size: 14px;
+  }
+
+  .project-badge {
+    font-size: 9px;
+    padding: 2px 5px;
   }
 }

@@ -12,7 +12,7 @@ function Homepage() {
   const [filteredPublicProjects, setFilteredPublicProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth(); // ✅ เพิ่ม user เพื่อเปรียบเทียบ
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -56,10 +56,15 @@ function Homepage() {
     }
   };
 
+  // ✅ ปรับปรุงฟังก์ชันให้ตรวจสอบว่าเป็นเจ้าของโปรเจกต์หรือไม่
   const handleProjectClick = (project) => {
-    if (isLoggedIn && userProjects.some(up => up.id === project.id)) {
+    const isOwner = isLoggedIn && user && project.user_id === user.id;
+    
+    if (isOwner) {
+      // ถ้าเป็นเจ้าของ -> ไปหน้า edit
       navigate(`/edit/${project.id}`);
     } else {
+      // ถ้าไม่ใช่เจ้าของ -> ไปหน้า view (read-only)
       navigate(`/project/${project.id}`);
     }
   };
@@ -82,6 +87,11 @@ function Homepage() {
     `;
 
     return `data:image/svg+xml;base64,${safeBase64Encode(svgCover)}`;
+  };
+
+  // ✅ ฟังก์ชันตรวจสอบว่าเป็นเจ้าของโปรเจกต์หรือไม่
+  const isProjectOwner = (project) => {
+    return isLoggedIn && user && project.user_id === user.id;
   };
 
   if (isLoading) {
@@ -111,10 +121,12 @@ function Homepage() {
                   e.target.src = getDefaultCover(project);
                 }}
               />
+              {/* ✅ เพิ่ม badge แสดงว่าเป็นโปรเจกต์ของเรา */}
+              <div className="project-badge owner-badge">Your Project</div>
             </div>
             <div className='project-info'>
               <h3 className='project-title'>{project.title}</h3>
-              <p className='project-author'>by {project.authorName || 'You'}</p>
+              <p className='project-author'>by You</p>
             </div>
           </div>
         ))}
@@ -144,23 +156,33 @@ function Homepage() {
 
       <div className='container'>
         {filteredPublicProjects.length > 0 ? (
-          filteredPublicProjects.map((project) => (
-            <div key={project.id} className='item project-item' onClick={() => handleProjectClick(project)}>
-              <div className='project-cover'>
-                <img
-                  src={project.cover_image || getDefaultCover(project)}
-                  alt={project.title}
-                  onError={(e) => {
-                    e.target.src = getDefaultCover(project);
-                  }}
-                />
+          filteredPublicProjects.map((project) => {
+            const isOwner = isProjectOwner(project);
+            
+            return (
+              <div key={project.id} className='item project-item' onClick={() => handleProjectClick(project)}>
+                <div className='project-cover'>
+                  <img
+                    src={project.cover_image || getDefaultCover(project)}
+                    alt={project.title}
+                    onError={(e) => {
+                      e.target.src = getDefaultCover(project);
+                    }}
+                  />
+                  {/* ✅ เพิ่ม badge แสดงสถานะ */}
+                  {isOwner ? (
+                    <div className="project-badge owner-badge">Your Project</div>
+                  ) : (
+                    <div className="project-badge view-badge">View Only</div>
+                  )}
+                </div>
+                <div className='project-info'>
+                  <h3 className='project-title'>{project.title}</h3>
+                  <p className='project-author'>by {project.authorName}</p>
+                </div>
               </div>
-              <div className='project-info'>
-                <h3 className='project-title'>{project.title}</h3>
-                <p className='project-author'>by {project.authorName}</p>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="no-results">
             {searchQuery ? `No projects found for "${searchQuery}"` : 'No public projects available'}

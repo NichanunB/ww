@@ -52,7 +52,7 @@ func AuthMiddleware(authService *services.AuthService) gin.HandlerFunc {
     }
 }
 
-// Optional middleware - allows both authenticated and unauthenticated requests
+// ✅ Optional middleware - allows both authenticated and unauthenticated requests
 func OptionalAuthMiddleware(authService *services.AuthService) gin.HandlerFunc {
     return func(c *gin.Context) {
         authHeader := c.GetHeader("Authorization")

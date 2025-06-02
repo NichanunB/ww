@@ -9,7 +9,6 @@ import '../components/styles/editpage.css';
 import useElementManager from '../hooks/useElementManager';
 import useToolManager from '../hooks/useToolManager';
 
-
 // Components
 import ProjectName from '../components/editpage-components/ProjectName';
 import Toolbar from '../components/editpage-components/Toolbar';
@@ -18,6 +17,7 @@ import StyleDropdown from '../components/editpage-components/RelationDropdown';
 import Canvas from '../components/editpage-components/Canvas';
 import PropertyPanel from '../components/editpage-components/PropertyPanel';
 import RelationshipLayer from '../components/editpage-components/RelationshipLayer';
+import ProjectSettingsModal from '../components/editpage-components/ProjectSettingsModal';
 
 function EditPage() {
   const { projectId } = useParams();
@@ -27,6 +27,7 @@ function EditPage() {
   
   const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
   const [isStyleDropdownOpen, setIsStyleDropdownOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("Untitled Character Diagram");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [relationshipType, setRelationshipType] = useState("generic");
@@ -71,7 +72,7 @@ function EditPage() {
     }
   }, [isLoggedIn, navigate]);
 
-  // ✅ Fixed: removed setElements from dependencies
+  // Load project
   useEffect(() => {
     const loadProject = async () => {
       if (projectId && isLoggedIn) {
@@ -105,7 +106,7 @@ function EditPage() {
     };
 
     loadProject();
-  }, [projectId, isLoggedIn, navigate]); // ❌ ลบ setElements ออก
+  }, [projectId, isLoggedIn, navigate]);
 
   useEffect(() => {
     if (currentProject) {
@@ -204,10 +205,9 @@ function EditPage() {
           title: projectName,
           project_data: JSON.stringify(projectData)
         };
-        
+
         await projectAPI.updateProject(currentProject.id, updates);
-        await projectAPI.saveProjectData(currentProject.id, projectData);
-        
+        await projectAPI.saveProjectData(currentProject.id, JSON.stringify(projectData));
         alert('Project saved successfully!');
       } else {
         const newProjectData = {
@@ -215,11 +215,11 @@ function EditPage() {
           description: null,
           project_data: JSON.stringify(projectData)
         };
-        
+
         const response = await projectAPI.createProject(newProjectData);
         const newProject = response.data.data || response.data;
         setCurrentProject(newProject);
-        
+
         navigate(`/edit/${newProject.id}`, { replace: true });
         alert('Project created and saved successfully!');
       }
@@ -259,6 +259,31 @@ function EditPage() {
     setUnsavedChanges(true);
   };
 
+  // ✅ เพิ่มฟังก์ชันสำหรับบันทึกการตั้งค่าโปรเจกต์ (รวมรูปหน้าปก)
+  const handleSettingsSave = async (updates) => {
+    setIsSaving(true);
+    try {
+      if (currentProject) {
+        // Update the project with new settings
+        await projectAPI.updateProject(currentProject.id, updates);
+        
+        // Update local state
+        setCurrentProject({ ...currentProject, ...updates });
+        if (updates.title) {
+          setProjectName(updates.title);
+        }
+        
+        setUnsavedChanges(false);
+        alert('Project settings saved successfully!');
+      }
+    } catch (error) {
+      console.error('Error saving project settings:', error);
+      alert('Failed to save project settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const enhancedHandleSelectElement = (id, options = {}) => {
     handleSelectElement(id, { ...options, relationshipType });
   };
@@ -294,6 +319,7 @@ function EditPage() {
           handleZoomOut={handleZoomOut}
           onSave={handleSave}
           onLoad={handleLoad}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
           isSaving={isSaving}
           unsavedChanges={unsavedChanges}
         />
@@ -343,6 +369,15 @@ function EditPage() {
           />
         )}
       </div>
+
+      {/* ✅ Project Settings Modal - ตรงนี้คือส่วนที่จะให้อัปโหลดรูปหน้าปกได้ */}
+      <ProjectSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        project={currentProject}
+        onSave={handleSettingsSave}
+        isLoading={isSaving}
+      />
     </div>
   );
 }
