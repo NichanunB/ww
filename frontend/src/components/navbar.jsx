@@ -59,7 +59,6 @@ function Navbar() {
             <>
               <li><Link to="/edit" onClick={() => setMenuOpen(false)}>Create</Link></li>
               <li><Link to="/profile" onClick={() => setMenuOpen(false)}>Account</Link></li>
-              <li><a href="#" onClick={() => setMenuOpen(false)}>Help</a></li>
               <li><button onClick={handleLogout}>Logout</button></li>
             </>
           )}
