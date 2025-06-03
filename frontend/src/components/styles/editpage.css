@@ -600,3 +600,19 @@
   padding: 0 12px;
  
 }
+.readonly-panel label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+.readonly-panel p {
+  font-size: 14px;
+  color: #333;
+  margin: 0;
+}
+.readonly-panel h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
