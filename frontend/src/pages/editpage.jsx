@@ -330,14 +330,6 @@ function EditPage() {
         addElement={handleAddElement} 
       />
 
-      <RelationshipLayer
-        elements={elements}
-        selectedElements={selectedElements}
-        handleSelectElement={enhancedHandleSelectElement}
-        updateElement={updateElement}
-        removeElement={removeElement}
-      />
-
       <StyleDropdown 
         isOpen={isStyleDropdownOpen}
         selectedElement={selectedElement} 
@@ -357,6 +349,17 @@ function EditPage() {
           updateElement={updateElement}
           createRelationship={createRelationship}
           handleCanvasClick={handleCanvasClick}
+        />
+
+        {/* ✅ RelationshipLayer ที่ถูกต้อง - ย้ายมาอยู่ใน main-content และเพิ่ม props ที่จำเป็น */}
+        <RelationshipLayer
+          elements={elements}
+          selectedElements={selectedElements}
+          handleSelectElement={enhancedHandleSelectElement}
+          updateElement={updateElement}
+          removeElement={removeElement}
+          zoomLevel={zoomLevel} // ✅ เพิ่ม zoomLevel
+          isReadOnly={false}   // ✅ เพิ่ม isReadOnly
         />
         
         {selectedElement && (

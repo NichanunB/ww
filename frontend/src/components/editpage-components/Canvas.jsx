@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+/* eslint-disable react/prop-types */
+import { useEffect, useRef, useState } from 'react';
 import { ELEMENT_TYPES } from '../../constants/elementTypes';
 import '../styles/editpage.css';
 
@@ -20,7 +21,7 @@ const splitLongWordToFit = (ctx, word, maxWidth) => {
 };
 
 // Helper function to render elements
-const renderElement = (ctx, element, isSelected, zoomLevel) => {
+const renderElement = (ctx, element, isSelected, zoomLevel, isViewMode = false) => {
   if (element.hidden) return;
 
   ctx.save();
@@ -29,7 +30,7 @@ const renderElement = (ctx, element, isSelected, zoomLevel) => {
   const zoomedY = element.y * zoomLevel;
 
   if (isSelected) {
-    ctx.strokeStyle = '#1677ff';
+    ctx.strokeStyle = isViewMode ? '#52c41a' : '#1677ff'; // ✅ เปลี่ยนสีใน view mode
     ctx.lineWidth = 2;
   } else {
     ctx.strokeStyle = element.color || '#000000';
@@ -148,9 +149,6 @@ const renderElement = (ctx, element, isSelected, zoomLevel) => {
       break;
     }
 
-    // ✅ ลบ case ELEMENT_TYPES.RELATIONSHIP ออกทั้งหมด
-    // เพราะให้ RelationshipLayer.jsx จัดการแสดงผลแทน
-
     default:
       break;
   }
@@ -167,7 +165,8 @@ const Canvas = ({
   relationshipMode,
   handleSelectElement, 
   updateElement,
-  handleCanvasClick 
+  handleCanvasClick,
+  isViewMode = false // ✅ เพิ่ม prop สำหรับ view mode
 }) => {
   const canvasContext = useRef(null);
   
@@ -187,9 +186,6 @@ const Canvas = ({
     // Set canvas dimensions
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
-    
-    // ✅ ไม่ต้องทำให้ elements เป็น global แล้ว
-    // เพราะ RelationshipLayer จัดการ relationship เอง
     
     // Initial render
     renderCanvas();
@@ -226,8 +222,7 @@ const Canvas = ({
     // Draw grid (optional)
     drawGrid(ctx, canvas.width, canvas.height, zoomLevel);
     
-    // ✅ แสดงผลเฉพาะ element ที่ไม่ใช่ RELATIONSHIP
-    // เพราะ RELATIONSHIP ให้ RelationshipLayer จัดการ
+    // แสดงผลเฉพาะ element ที่ไม่ใช่ RELATIONSHIP
     elements
       .filter(element => element.type !== ELEMENT_TYPES.RELATIONSHIP)
       .forEach(element => {
@@ -235,7 +230,8 @@ const Canvas = ({
           ctx, 
           element, 
           selectedElements.includes(element.id),
-          zoomLevel
+          zoomLevel,
+          isViewMode // ✅ ส่ง isViewMode ไปด้วย
         );
       });
   };
@@ -273,11 +269,11 @@ const Canvas = ({
     
     switch (element.type) {
       case ELEMENT_TYPES.CIRCLE:
-        const radius = element.width / 2;
+        { const radius = element.width / 2;
         const distance = Math.sqrt(
           Math.pow(element.x - x, 2) + Math.pow(element.y - y, 2)
         );
-        return distance <= radius;
+        return distance <= radius; }
         
       case ELEMENT_TYPES.TEXTBOX:
         return (
@@ -288,17 +284,14 @@ const Canvas = ({
         );
         
       case ELEMENT_TYPES.LINE:
-        const lineEndX = element.x + element.width;
+        { const lineEndX = element.x + element.width;
         // For simplicity, we'll consider a small area around the line
         return (
           x >= element.x - 5 &&
           x <= lineEndX + 5 &&
           y >= element.y - 5 &&
           y <= element.y + 5
-        );
-        
-      // ✅ ลบ case ELEMENT_TYPES.RELATIONSHIP ออก
-      // เพราะ RelationshipLayer จัดการการคลิกเอง
+        ); }
         
       default:
         return false;
@@ -307,7 +300,7 @@ const Canvas = ({
   
   // Handle mouse down for starting drag
   const handleMouseDown = (e) => {
-    if (isErasing) return;
+    if (isErasing && isViewMode) return; // ✅ ปิด erasing ในโหมด view
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -316,13 +309,21 @@ const Canvas = ({
     const x = (e.clientX - rect.left) / zoomLevel;
     const y = (e.clientY - rect.top) / zoomLevel;
     
-    // ✅ หา element ที่คลิก โดยไม่รวม RELATIONSHIP
+    // หา element ที่คลิก โดยไม่รวม RELATIONSHIP
     const clickedElement = [...elements]
       .filter(element => element.type !== ELEMENT_TYPES.RELATIONSHIP)
       .reverse()
       .find(element => isPointInElement(x, y, element));
     
     if (clickedElement) {
+      // ✅ ในโหมด view - อนุญาตให้เลือกดูได้แต่ไม่ให้ลาก
+      if (isViewMode) {
+        handleSelectElement(clickedElement.id, { isErasing: false, relationshipMode: false });
+        // ✅ แก้ไข: ลบการเรียก handleCanvasClick ออก
+        return;
+      }
+
+      // ✅ ในโหมด edit - ทำงานปกติ
       // Start dragging the clicked element
       setIsDragging(true);
       setDragStart({ x, y });
@@ -354,7 +355,8 @@ const Canvas = ({
   
   // Handle mouse move for dragging
   const handleMouseMove = (e) => {
-    if (!isDragging || draggedElementIds.length === 0 || isErasing || relationshipMode) return;
+    // ✅ ปิด dragging ในโหมด view
+    if (!isDragging || draggedElementIds.length === 0 || isErasing || relationshipMode || isViewMode) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -404,7 +406,9 @@ const Canvas = ({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseOut={handleMouseOut}
-        style={{ cursor: isDragging ? 'grabbing' : 'default' }}
+        style={{ 
+          cursor: isDragging ? 'grabbing' : (isViewMode ? 'pointer' : 'default') // ✅ เปลี่ยน cursor ในโหมด view
+        }}
       />
     </div>
   );

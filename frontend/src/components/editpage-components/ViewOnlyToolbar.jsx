@@ -6,7 +6,8 @@ import {
   ZoomIn, 
   ZoomOut, 
   Eye,
-  Edit3
+  Edit3,
+  User
 } from "lucide-react";
 
 function ViewOnlyToolbar({ 
@@ -15,7 +16,8 @@ function ViewOnlyToolbar({
   handleZoomOut,
   onBackToHome,
   onEditProject,
-  isOwner
+  isOwner,
+  projectAuthor // ✅ เพิ่ม prop สำหรับแสดงชื่อผู้สร้าง
 }) {
   return (
     <div className="toolbar view-only-toolbar">
@@ -45,6 +47,17 @@ function ViewOnlyToolbar({
         <Eye size={20} />
         <span>View Mode</span>
       </div>
+      
+      {/* ✅ Project author info */}
+      {projectAuthor && (
+        <>
+          <div className="toolbar-divider"></div>
+          <div className="project-author-info">
+            <User size={16} />
+            <span>by {projectAuthor}</span>
+          </div>
+        </>
+      )}
       
       <div className="toolbar-divider"></div>
       

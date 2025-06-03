@@ -23,7 +23,8 @@ function ProjectView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedElementId, setSelectedElementId] = useState(null);
+  const [, setAuthorInfo] = useState(null);
 
   useEffect(() => {
     const loadProject = async () => {
@@ -31,6 +32,14 @@ function ProjectView() {
         const response = await projectAPI.getProject(projectId);
         const projectData = response.data.data || response.data;
         setProject(projectData);
+        
+        // ✅ ดึงข้อมูลผู้เขียนจาก response
+        if (projectData.authorName) {
+          setAuthorInfo({
+            name: projectData.authorName,
+            id: projectData.user_id
+          });
+        }
         
         if (projectData.project_data) {
           let parsedData;
@@ -42,6 +51,8 @@ function ProjectView() {
           
           if (parsedData.elements) {
             setElements(parsedData.elements);
+            // ✅ เก็บ elements ใน window เพื่อให้ ReadOnlyPropertyPanel เข้าถึงได้
+            window.currentElements = parsedData.elements;
           }
         }
       } catch (error) {
@@ -78,10 +89,32 @@ function ProjectView() {
   };
 
   // ✅ Handle element selection for viewing properties (read-only)
-  const handleElementSelect = (elementId) => {
+  const handleElementSelect = (elementId, options = {}) => {
+    console.log('handleElementSelect called with:', elementId, options); // Debug
+    
+    if (!elementId) {
+      setSelectedElementId(null);
+      return;
+    }
+
     const element = elements.find(el => el.id === elementId);
-    setSelectedElement(element);
+    if (element) {
+      setSelectedElementId(elementId);
+      console.log('Selected element for view:', element); // Debug
+    }
   };
+
+  // ✅ Get selected element object
+  const selectedElement = selectedElementId 
+    ? elements.find(el => el.id === selectedElementId) 
+    : null;
+
+  // ✅ Handle canvas click to deselect
+  const handleCanvasClick = () => {
+    setSelectedElementId(null);
+  };
+
+
 
   if (isLoading) {
     return (
@@ -108,16 +141,19 @@ function ProjectView() {
     );
   }
 
+
+
   return (
     <div className="edit-page project-view-mode">
       {/* ✅ View-Only Banner */}
       {!isOwner && (
         <div className="view-only-banner">
-          <span>👁️ View Only Mode - No editing allowed</span>
+          <span>👁️ View Only Mode - Click on elements to view their properties</span>
         </div>
       )}
 
-      {/* ✅ Project Title Bar */}
+
+      
       <div className="top-bar">
         <div className="project-name-container">
           <h2 className="project-name-text">{project?.title || 'Untitled Character Diagram'}</h2>
@@ -138,31 +174,33 @@ function ProjectView() {
         <Canvas 
           canvasRef={canvasRef}
           elements={elements} 
-          selectedElements={selectedElement ? [selectedElement.id] : []}
+          selectedElements={selectedElementId ? [selectedElementId] : []}
           zoomLevel={zoomLevel}
           isErasing={false}
           relationshipMode={false}
           handleSelectElement={handleElementSelect}
           updateElement={() => {}} // ✅ ปิดการแก้ไข
           createRelationship={() => {}} // ✅ ปิดการสร้าง relationship
-          handleCanvasClick={() => setSelectedElement(null)}
+          handleCanvasClick={handleCanvasClick}
+          isViewMode={true} // ✅ เพิ่มบรรทัดนี้!
         />
 
         <RelationshipLayer
           elements={elements}
-          selectedElements={selectedElement ? [selectedElement.id] : []}
+          selectedElements={selectedElementId ? [selectedElementId] : []}
           handleSelectElement={handleElementSelect}
           updateElement={() => {}} // ✅ ปิดการแก้ไข
           removeElement={() => {}} // ✅ ปิดการลบ
         />
         
-        {/* ✅ Read-Only Property Panel */}
+        {/* ✅ Read-Only Property Panel - แสดงเมื่อมีการเลือก element */}
         {selectedElement && (
           <ReadOnlyPropertyPanel 
             selectedElement={selectedElement}
-            projectAuthor={project?.authorName || 'Unknown Author'}
           />
         )}
+
+
       </div>
     </div>
   );
